@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "name": "blog_aggregator-ts",
+  "version": "1.0.0",
+  "description": "Blog Aggregator written in TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx ./src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}
