@@ -8,6 +8,13 @@
       "when": 1755234795706,
       "tag": "0000_bumpy_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1755289806015,
+      "tag": "0001_fuzzy_venus",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { createUser, getUserByName, reset, getUsers } from "./lib/db/queries/users";
 import { setUser, readConfig } from "./config";
-import { fetchFeed } from "./lib/rss";
+import { fetchFeed, createFeed, printFeed } from "./lib/rss";
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
@@ -63,6 +63,33 @@ export async function handlerAgg(_: string) {
   const feedData = await fetchFeed(feedURL);
   const feedDataStr = JSON.stringify(feedData, null, 2);
   console.log(feedDataStr);
+}
+
+export async function handlerAddFeed(cmdName: string, ...args: string[]) {
+    if (args.length !== 2) {
+        throw new Error(`usage: ${cmdName} <feed_name> <url>`);
+    }
+    const config = readConfig();
+
+    if (!config.currentUserName) {
+        throw new Error("No user is currently logged in. Please login first.");
+    }
+    const user = await getUserByName(config.currentUserName);
+
+    if (!user) {
+        throw new Error(`User ${config.currentUserName} not found`);
+    }
+
+    const feedName = args[0];
+    const url = args[1];
+
+    const feed = await createFeed(feedName, url, user.id);
+    if (!feed) {
+        throw new Error(`Failed to create feed`);
+    }
+
+    console.log("Feed created successfully:");
+    printFeed(feed, user);
 }
 
 export async function registerCommand(
