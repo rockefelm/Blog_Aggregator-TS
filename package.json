@@ -5,7 +5,9 @@
   "description": "Blog Aggregator written in TypeScript",
   "main": "index.js",
   "scripts": {
-    "start": "tsx ./src/index.ts"
+    "start": "tsx ./src/index.ts",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +19,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.44.4",
+    "fast-xml-parser": "^5.2.5",
     "postgres": "^3.4.7"
   }
 }
