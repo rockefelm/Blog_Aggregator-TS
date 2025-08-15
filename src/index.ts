@@ -1,4 +1,4 @@
-import { type CommandRegistry, handlerLogin, registerCommand, handlerRegister, runCommand, handlerReset } from "./commands.js";
+import { type CommandRegistry, handlerLogin, registerCommand, handlerRegister, handlerGetUsers, runCommand, handlerReset } from "./commands.js";
 
 
 async function main() {
@@ -6,6 +6,7 @@ async function main() {
   registerCommand(registeredCommands, "login", handlerLogin);
   registerCommand(registeredCommands, "register", handlerRegister);
   registerCommand(registeredCommands, "reset", handlerReset);
+  registerCommand(registeredCommands, "users", handlerGetUsers);
   const cmdName = process.argv[2];
   const args = process.argv.slice(3);
   if (!cmdName) {

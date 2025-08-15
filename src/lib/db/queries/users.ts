@@ -1,3 +1,4 @@
+import { debugPort } from "process";
 import { db } from "..";
 import { users } from "../schema";
 import { eq } from "drizzle-orm";
@@ -15,4 +16,9 @@ export async function getUserByName(name: string) {
 export async function reset() {
   await db.delete(users);
   console.log("All users have been reset.");
+}
+
+export async function getUsers() {
+  const allUsers = await db.select().from(users);
+  return allUsers;
 }

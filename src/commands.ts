@@ -1,5 +1,5 @@
-import { createUser, getUserByName, reset } from "./lib/db/queries/users";
-import { setUser } from "./config";
+import { createUser, getUserByName, reset, getUsers } from "./lib/db/queries/users";
+import { setUser, readConfig } from "./config";
 
 
 
@@ -38,6 +38,23 @@ export const handlerRegister: CommandHandler = async (cmdName: string, ...args: 
 export const handlerReset: CommandHandler = async (cmdName: string, ...args: string[]) => {
     await reset();
     console.log("Database reset successfully.");
+}
+
+export const handlerGetUsers: CommandHandler = async (cmdName: string, ...args: string[]) => {
+    const allUsers = await getUsers();
+    if (allUsers.length === 0) {
+        console.log("No users found.");
+    } else {
+        const config = readConfig();
+        const currentUserName = config.currentUserName;
+        allUsers.forEach(user => {
+            if (user.name === currentUserName) {
+                console.log(`* ${user.name} (current)`);
+            } else {
+                console.log(`* ${user.name}`);
+            }
+        });
+    }
 }
 
 export async function registerCommand(
