@@ -1,22 +1,27 @@
+import { get } from "http";
 import { setUser } from "./config";
+import { getUserByName } from "./lib/db/queries/users";
 
 
-type CommandHandler = (cmdName: string, ...args: string[]) => void;
+type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
 
 export type CommandRegistry = {
   [cmdName: string]: CommandHandler;
 };
 
-export const handlerLogin: CommandHandler = (cmdName: string, ...args: string[]) => {
+export const handlerLogin: CommandHandler = async (cmdName: string, ...args: string[]) => {
     if (args.length === 0) {
         throw new Error("Username is required for login command");
     }
     const userName = args[0];
+    if (await getUserByName(userName) === undefined) {
+        throw new Error(`User ${userName} does not exist.`);
+    }
     setUser(userName);
     console.log(`User set to ${userName}`);
 }
 
-export function registerCommand(
+export async function registerCommand(
     registry: CommandRegistry, 
     cmdName: string, 
     handler: CommandHandler
@@ -29,13 +34,13 @@ export function registerCommand(
 
 } 
 
-export function runCommand(
+export async function runCommand(
     registry: CommandRegistry,
     cmdName: string,
     ...args: string[]
 ) {
     if (registry[cmdName]) {
-        registry[cmdName](cmdName, ...args);
+        await registry[cmdName](cmdName, ...args);
     } else {
         throw new Error(`Command ${cmdName} not found.`);
     }

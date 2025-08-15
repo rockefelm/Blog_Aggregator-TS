@@ -1,7 +1,7 @@
 import { type CommandRegistry, handlerLogin, registerCommand, runCommand } from "./commands.js";
 
 
-function main() {
+async function main() {
   const registeredCommands: CommandRegistry = {};
   registerCommand(registeredCommands, "login", handlerLogin);
   const cmdName = process.argv[2];
@@ -11,7 +11,7 @@ function main() {
     process.exit(1);
   }
   try {
-    runCommand(registeredCommands, cmdName, ...args);
+    await runCommand(registeredCommands, cmdName, ...args);
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error: ${error.message}`);
@@ -20,6 +20,7 @@ function main() {
     }
     process.exit(1);
   }
+  process.exit(0);
 }
 
 
