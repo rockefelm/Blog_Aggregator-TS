@@ -1,4 +1,4 @@
-import { get } from "http";
+import { createUser } from "./lib/db/queries/users";
 import { setUser } from "./config";
 import { getUserByName } from "./lib/db/queries/users";
 
@@ -19,6 +19,20 @@ export const handlerLogin: CommandHandler = async (cmdName: string, ...args: str
     }
     setUser(userName);
     console.log(`User set to ${userName}`);
+}
+
+export const handlerRegister: CommandHandler = async (cmdName: string, ...args: string[]) => {
+    if (args.length === 0) {
+        throw new Error("Username is required for register command");
+    }
+    const userName = args[0];
+    if (await getUserByName(userName)) {
+        throw new Error(`User ${userName} already exists.`);
+    } 
+    const newUser = await createUser(userName);
+    setUser(userName); // Set the current user in config
+    console.log(`User ${newUser.name} registered successfully.`);
+    console.log(newUser); // Log the user data for debugging
 }
 
 export async function registerCommand(
