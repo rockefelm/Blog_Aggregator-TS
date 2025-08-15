@@ -1,6 +1,6 @@
-import { createUser } from "./lib/db/queries/users";
+import { createUser, getUserByName, reset } from "./lib/db/queries/users";
 import { setUser } from "./config";
-import { getUserByName } from "./lib/db/queries/users";
+
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
@@ -33,6 +33,11 @@ export const handlerRegister: CommandHandler = async (cmdName: string, ...args: 
     setUser(userName); // Set the current user in config
     console.log(`User ${newUser.name} registered successfully.`);
     console.log(newUser); // Log the user data for debugging
+}
+
+export const handlerReset: CommandHandler = async (cmdName: string, ...args: string[]) => {
+    await reset();
+    console.log("Database reset successfully.");
 }
 
 export async function registerCommand(
