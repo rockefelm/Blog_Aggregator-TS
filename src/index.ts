@@ -1,4 +1,15 @@
-import { type CommandRegistry, handlerAgg, handlerAddFeed, handlerLogin, registerCommand, handlerRegister, handlerGetUsers, runCommand, handlerReset } from "./commands.js";
+import { 
+  type CommandRegistry, 
+  handlerAgg, 
+  handlerAddFeed, 
+  handlerLogin, 
+  registerCommand, 
+  handlerRegister, 
+  handlerGetUsers, 
+  runCommand, 
+  handlerReset,
+  handlerListFeeds 
+} from "./commands.js";
 
 
 async function main() {
@@ -9,6 +20,7 @@ async function main() {
   registerCommand(registeredCommands, "users", handlerGetUsers);
   registerCommand(registeredCommands, "agg", handlerAgg);
   registerCommand(registeredCommands, "addfeed", handlerAddFeed);
+  registerCommand(registeredCommands, "feeds", handlerListFeeds);
   const cmdName = process.argv[2];
   const args = process.argv.slice(3);
   if (!cmdName) {

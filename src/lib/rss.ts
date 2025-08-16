@@ -104,3 +104,8 @@ export async function createFeed(
 
   return result[0];
 }
+
+export async function getFeeds() {
+  const result = await db.select().from(feeds);
+  return result;
+}

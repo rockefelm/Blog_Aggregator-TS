@@ -1,6 +1,6 @@
-import { createUser, getUserByName, reset, getUsers } from "./lib/db/queries/users";
+import { createUser, getUserByName, reset, getUsers, getUserById } from "./lib/db/queries/users";
 import { setUser, readConfig } from "./config";
-import { fetchFeed, createFeed, printFeed } from "./lib/rss";
+import { fetchFeed, createFeed, printFeed, getFeeds } from "./lib/rss";
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
@@ -90,6 +90,26 @@ export async function handlerAddFeed(cmdName: string, ...args: string[]) {
 
     console.log("Feed created successfully:");
     printFeed(feed, user);
+}
+
+export async function handlerListFeeds(cmdName: string, ...args: string[]) {
+    const feeds = await getFeeds();
+
+    if (feeds.length === 0) {
+        console.log("No feeds found.");
+        return;
+    }
+
+    console.log(`Found ${feeds.length} feeds:`);
+    for (const feed of feeds) {
+        const user = await getUserById(feed.userId);
+        if (!user) {
+            throw new Error(`Can't find user for feed ${feed.id}`);
+        }
+        printFeed(feed, user);
+        console.log("--------------------");
+    }
+    
 }
 
 export async function registerCommand(
