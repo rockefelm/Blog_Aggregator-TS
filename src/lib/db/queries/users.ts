@@ -10,7 +10,7 @@ export async function createUser(name: string) {
 
 export async function getUserByName(name: string) {
     const user = await db.select().from(users).where(eq(users.name, name)).limit(1);
-    return user[0];
+    return user[0] || null;
 }
 
 export async function reset() {
