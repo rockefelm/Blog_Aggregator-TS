@@ -2,7 +2,7 @@ import { createUser,
     getUserByName, 
     reset, 
     getUsers, 
-    getUserById 
+    getUserById, 
 } from "./lib/db/queries/users";
 import { setUser, readConfig } from "./config";
 import { fetchFeed, 
@@ -14,9 +14,26 @@ import { fetchFeed,
     getFeedFollowsForUser, 
     getFeedByURL 
 } from "./lib/rss";
+import { User } from "./lib/db/schema";
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
+type userCommandHandler = (cmdName: string, user: User, ...args: string[]) => Promise<void>;
+type middlewareLoggedIn = (handler: userCommandHandler) => CommandHandler;
+
+export function middlewareLoggedIn(handler: userCommandHandler): CommandHandler {
+  return async (cmdName: string, ...args: string[]) => {
+    const config = readConfig();
+    if (!config.currentUserName) {
+      throw new Error("No user is currently logged in. Please login first.");
+    }
+    const user = await getUserByName(config.currentUserName);
+    if (!user) {
+      throw new Error(`User ${config.currentUserName} not found`);
+    }
+    return handler(cmdName, user, ...args);
+  };
+}
 
 export type CommandRegistry = {
   [cmdName: string]: CommandHandler;
@@ -78,19 +95,9 @@ export async function handlerAgg(_: string) {
   console.log(feedDataStr);
 }
 
-export async function handlerAddFeed(cmdName: string, ...args: string[]) {
+export async function handlerAddFeed(cmdName: string,user: User, ...args: string[]) {
     if (args.length !== 2) {
         throw new Error(`usage: ${cmdName} <feed_name> <url>`);
-    }
-    const config = readConfig();
-
-    if (!config.currentUserName) {
-        throw new Error("No user is currently logged in. Please login first.");
-    }
-    const user = await getUserByName(config.currentUserName);
-
-    if (!user) {
-        throw new Error(`User ${config.currentUserName} not found`);
     }
 
     const feedName = args[0];
@@ -128,19 +135,9 @@ export async function handlerListFeeds(cmdName: string, ...args: string[]) {
     
 }
 
-export async function handlerFollow(cmdName: string, ...args: string[]) {
+export async function handlerFollow(cmdName: string,user: User, ...args: string[]) {
   if (args.length !== 1) {
     throw new Error(`usage: ${cmdName} <feed_url>`);
-  }
-
-  const config = readConfig();
-  if (!config.currentUserName) {
-    throw new Error("No user is currently logged in");
-  }
-  const user = await getUserByName(config.currentUserName);
-
-  if (!user) {
-    throw new Error(`User ${config.currentUserName} not found`);
   }
 
   const feedURL = args[0];
@@ -156,17 +153,10 @@ export async function handlerFollow(cmdName: string, ...args: string[]) {
   printFeedFollow(ffRow.userName, ffRow.feedName);
 }
 
-export async function handlerListFeedFollows(_: string) {
-    const config = readConfig();
-    if (!config.currentUserName) {
-        throw new Error("No user is currently logged in");
+export async function handlerListFeedFollows(cmdName: string, user: User, ...args: string[]) {
+    if (args.length > 0) {
+        throw new Error(`usage: ${cmdName}`);
     }
-    const user = await getUserByName(config.currentUserName);
-
-    if (!user) {
-        throw new Error(`User ${config.currentUserName} not found`);
-    }
-
     const feedFollows = await getFeedFollowsForUser(user.id);
     if (feedFollows.length === 0) {
         console.log(`No feed follows found for this user.`);
