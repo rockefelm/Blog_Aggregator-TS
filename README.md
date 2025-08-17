@@ -1,5 +1,5 @@
 
-# Blog Aggregator CLI
+# Blog Aggregator CLI - (Gator)
 
 A TypeScript-based CLI tool for aggregating and managing blog posts from RSS feeds. Uses Drizzle ORM and PostgreSQL for data storage.
 
@@ -13,11 +13,28 @@ A TypeScript-based CLI tool for aggregating and managing blog posts from RSS fee
 - [Tracking Changes](#tracking-changes)
 - [License](#license)
 
+
 ## Prerequisites
-- Node.js (v18+ recommended)
-- npm
-- PostgreSQL (running and accessible)
-- Drizzle ORM (installed as a dependency)
+
+- **Node.js (v18+ recommended)**: Install from [nodejs.org](https://nodejs.org/).
+- **npm**: Comes with Node.js.
+- **TypeScript**: Installed as a dev dependency; no global install required.
+- **Drizzle ORM**: Installed via npm as a dependency.
+- **PostgreSQL**:
+  - Install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/).
+  - Start the PostgreSQL service:
+    ```bash
+    sudo service postgresql start
+    ```
+  - Create a database and user (example):
+    ```bash
+    sudo -u postgres psql
+    CREATE DATABASE gator;
+    CREATE USER postgres WITH PASSWORD 'postgres';
+    GRANT ALL PRIVILEGES ON DATABASE gator TO postgres;
+    \q
+    ```
+  - Update your connection string in `drizzle.config.ts` as needed.
 
 ## Installation
 Clone the repository and install dependencies:
@@ -26,16 +43,22 @@ npm install
 ```
 
 ## Configuration
-Edit or create `src/config.ts` to specify your RSS feed sources and other settings:
+Database and migration settings are managed in `drizzle.config.ts`. Edit this file to set your PostgreSQL connection details and migration options. Example:
+
 ```ts
-export default {
-  feeds: [
-   'https://example.com/rss',
-   'https://anotherblog.com/feed',
-  ],
-  // Add other config options as needed
-};
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "src//lib/db/schema.ts",
+  out: "src/lib/db",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: "postgres://postgres:postgres@localhost:5432/gator?sslmode=disable",
+  },
+});
 ```
+
+Update the `url` field with your database credentials as needed.
 
 ## Database Setup & Migration
 1. **Configure your database connection**
