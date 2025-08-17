@@ -1,7 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
-import { Feed, User, feeds, feedFollows, users } from "./db/schema";
+import { Feed, User, feeds, feedFollows, users, NewPost } from "./db/schema";
 import { db } from "./db";
 import { eq, and, sql } from "drizzle-orm";
+import { createPost } from "./db/queries/posts";
 
 export type RSSFeed = {
   channel: {
@@ -231,10 +232,21 @@ export async function scrapeFeeds() {
     try {
         const rss = await fetchFeed(feed.url);
         console.log(`Fetched ${rss.channel.item.length} items from ${feed.name}`);
-        const items = rss.channel.item.slice(0, 20); // limit to first 20 items
+        const items = rss.channel.item;
 
-        for (const item of items) {
-            console.log(item.title);
+        for (let item of items) {
+
+            const now = new Date();
+
+            await createPost({
+                url: item.link,
+                feedId: feed.id,
+                title: item.title,
+                createdAt: now,
+                updatedAt: now,
+                description: item.description,
+                publishedAt: new Date(item.pubDate),
+            } satisfies NewPost);
         }
     } catch (error) {
         console.error(`Failed to fetch feed ${feed.name}:`, error);

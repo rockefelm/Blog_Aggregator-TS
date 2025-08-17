@@ -18,6 +18,7 @@ import {
 } from "./lib/rss";
 import { User } from "./lib/db/schema";
 import { parseDuration } from "./lib/interval"
+import { getPostsForUsers } from "./lib/db/queries/posts";
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
@@ -218,6 +219,33 @@ export async function handlerUnfollow(
   }
 
   console.log(`%s unfollowed successfully!`, feed.name);
+}
+
+export async function handlerBrowse(
+    cmdName: string,
+    user: User,
+    ...args: string[]
+    ) {
+    let limit = 2;
+    if (args.length === 1) {
+        let specifiedLimit = parseInt(args[0]);
+        if (specifiedLimit) {
+        limit = specifiedLimit;
+        } else {
+        throw new Error(`usage: ${cmdName} [limit]`);
+        }
+    }
+
+    const posts = await getPostsForUsers(user.id, limit);
+
+    console.log(`Found ${posts.length} posts for user ${user.name}`);
+    for (let post of posts) {
+        console.log(`${post.publishedAt} from ${post.feedName}`);
+        console.log(`--- ${post.title} ---`);
+        console.log(`    ${post.description}`);
+        console.log(`Link: ${post.url}`);
+        console.log(`=====================================`);
+    }
 }
 
 export async function registerCommand(
