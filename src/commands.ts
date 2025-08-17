@@ -5,7 +5,7 @@ import { createUser,
     getUserById, 
 } from "./lib/db/queries/users";
 import { setUser, readConfig } from "./config";
-import { fetchFeed, 
+import { 
     createFeed, 
     printFeed, 
     getFeeds, 
@@ -13,9 +13,11 @@ import { fetchFeed,
     printFeedFollow, 
     getFeedFollowsForUser, 
     getFeedByURL,
-    deleteFeedFollow 
+    deleteFeedFollow,
+    scrapeFeeds 
 } from "./lib/rss";
 import { User } from "./lib/db/schema";
+import { parseDuration } from "./lib/interval"
 
 
 type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
@@ -45,7 +47,7 @@ export const handlerLogin: CommandHandler = async (cmdName: string, ...args: str
         throw new Error("Username is required for login command");
     }
     const userName = args[0];
-    if (await getUserByName(userName) === undefined) {
+    if (await getUserByName(userName) === null) {
         throw new Error(`User ${userName} does not exist.`);
     }
     setUser(userName);
@@ -88,13 +90,37 @@ export const handlerGetUsers: CommandHandler = async (cmdName: string, ...args: 
     }
 }
 
-export async function handlerAgg(_: string) {
-  const feedURL = "https://www.wagslane.dev/index.xml";
+export async function handlerAgg(cmdName: string, ...args: string[]) {
+    if (args.length !== 1) {
+        throw new Error(`usage: ${cmdName} <time_between_reqs>`);
+    }
 
-  const feedData = await fetchFeed(feedURL);
-  const feedDataStr = JSON.stringify(feedData, null, 2);
-  console.log(feedDataStr);
+    const timeArg = args[0];
+    const timeBetweenRequests = parseDuration(timeArg);
+    if (!timeBetweenRequests) {
+        throw new Error(`invalid duration: ${timeArg} — use format 1h 1m 1s or 1ms`,);
+    }
+    if (timeBetweenRequests < 1000) {
+        throw new Error(`time between requests must be at least 1 second (1000ms)`);
+    }
+    console.log(`Collecting feeds every ${timeArg}...`);
+
+    // run the first scrape immediately
+    scrapeFeeds();
+
+    const interval = setInterval(() => {
+        scrapeFeeds();
+    }, timeBetweenRequests);
+
+    await new Promise<void>((resolve) => {
+        process.on("SIGINT", () => {
+        console.log("Shutting down feed aggregator...");
+        clearInterval(interval);
+        resolve();
+        });
+    });
 }
+
 
 export async function handlerAddFeed(cmdName: string,user: User, ...args: string[]) {
     if (args.length !== 2) {

@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { Feed, User, feeds, feedFollows, users } from "./db/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export type RSSFeed = {
   channel: {
@@ -201,4 +201,44 @@ export async function deleteFeedFollow(feedId: string, userId: string) {
     .returning();
 
   return result;
+}
+
+async function markFeedFetched(feedId: string) {
+    await db.update(feeds)
+        .set({
+            lastFetchedAt: new Date()
+        })
+        .where(eq(feeds.id, feedId));
+}
+
+async function getNextFeedToFetch() {
+    const [result] = await db.select()
+        .from(feeds)
+        .orderBy(sql`${feeds.lastFetchedAt} ASC NULLS FIRST`)
+        .limit(1);
+    return result;
+}
+
+export async function scrapeFeeds() {
+    const feed = await getNextFeedToFetch();
+    if (!feed) {
+        console.log("No feeds to fetch.");
+        return;
+    }
+
+    console.log(`Fetching feed: ${feed.name} (${feed.url})`);
+    await markFeedFetched(feed.id);
+    try {
+        const rss = await fetchFeed(feed.url);
+        console.log(`Fetched ${rss.channel.item.length} items from ${feed.name}`);
+        const items = rss.channel.item.slice(0, 20); // limit to first 20 items
+
+        for (const item of items) {
+            console.log(item.title);
+        }
+    } catch (error) {
+        console.error(`Failed to fetch feed ${feed.name}:`, error);
+    }
+    
+    console.log("--------------------");
 }
